@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<head>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" />
+<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js"></script>
+<script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+
+
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: sans-serif;
+    }
+    
+    #my-map {
+        flex: center;
+        width:960px;
+        height:500px;
+    }
+</style>
+</head>
+
+<body>
+    <h1>PDX Reporter Data (v0.0.1)</h1>
+	<div id="my-map"></div>
+<script>
+window.onload = function () {
+    var basemap = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+		attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+	});
+    
+    var imageSnippet = function(img) {
+        if (img == undefined || img == null || img == "") {
+            return "";   
+        } else {
+            var link = img.split("&thumb")[0];
+            return "<b>Image:</b>" +
+                "<a href='" + link + "' target='_blank'>" +
+                "<img src='" + img + "' width='100' height='100'>" + 
+                "</a><br>";
+        }
+    }
+    
+    var popupSnippet = function(feature) {
+        return "<b>ID:</b> " + feature.properties.id + "<br>" + 
+          "<b>Category:</b> " + feature.properties.category + "<br>" +
+          "<b>Comment:</b> " + feature.properties.comment + "<br>" +
+          imageSnippet(feature.properties.image) +
+          "<b>Published:</b> " + feature.properties.published + "<br>" +
+          "<a target='_blank' href='https://www.google.com/maps/?q=" + feature.geometry.coordinates.reverse().join(',') + "'>View on Google Maps</a>";
+    }
+
+    $.getJSON("reports.geojson", function(data) {
+
+    var geojson = L.geoJson(data, {
+      onEachFeature: function (feature, layer) {
+          console.log(feature);
+        var popup = popupSnippet(feature);
+        layer.bindPopup(popup);
+      }
+    });
+
+    var map = L.map('my-map')
+    .fitBounds(geojson.getBounds());
+//    .setView([0.0,-10.0], 2);
+
+    basemap.addTo(map);
+    geojson.addTo(map);
+  });
+
+};
+</script>
+</body>
+</html>
